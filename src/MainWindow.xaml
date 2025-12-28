@@ -1,0 +1,259 @@
+<Window x:Class="FreeMyRam.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="FreeMyRam" 
+        Height="480" Width="360"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True">
+    
+    <Border Background="{DynamicResource PrimaryBrush}" 
+            CornerRadius="16" 
+            BorderBrush="{DynamicResource AccentBrush}" 
+            BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.5" Color="Black"/>
+        </Border.Effect>
+        
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title Bar -->
+            <Grid Grid.Row="0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <TextBlock Text="🧹 FreeMyRam" 
+                              Foreground="{DynamicResource TextBrush}" 
+                              FontSize="14" 
+                              FontWeight="Bold"/>
+                    <TextBlock Text="v1.0 by rainaku" 
+                              Foreground="{DynamicResource SubTextBrush}" 
+                              FontSize="10" 
+                              Margin="8,4,0,0"
+                              VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,8,0">
+                    <Button Content="—" Click="Minimize_Click" 
+                            Style="{StaticResource OptionButton}" Padding="8,4"/>
+                    <Button Content="✕" Click="Close_Click" 
+                            Style="{StaticResource OptionButton}" Padding="8,4"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- RAM Info -->
+            <Border Grid.Row="1" Background="{DynamicResource SecondaryBrush}" 
+                    CornerRadius="12" Margin="16,8,16,8" Padding="16">
+                <StackPanel>
+                    <TextBlock x:Name="MemoryUsageLabel"
+                              Text="Memory Usage" 
+                              Foreground="{DynamicResource SubTextBrush}" 
+                              FontSize="12"/>
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="MemoryUsageText" 
+                                  Text="-- / -- GB" 
+                                  Foreground="{DynamicResource TextBrush}" 
+                                  FontSize="24" 
+                                  FontWeight="Bold"/>
+                        <TextBlock x:Name="MemoryPercentText" 
+                                  Grid.Column="1"
+                                  Text="--%"
+                                  Foreground="{DynamicResource HighlightBrush}" 
+                                  FontSize="24" 
+                                  FontWeight="Bold"/>
+                    </Grid>
+                    <ProgressBar x:Name="MemoryProgressBar" 
+                                Height="6" 
+                                Margin="0,12,0,0" 
+                                Value="0" 
+                                Maximum="100"
+                                Background="{DynamicResource AccentBrush}"
+                                Foreground="{DynamicResource HighlightBrush}"
+                                BorderThickness="0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Clean Options -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="16,0">
+                <StackPanel x:Name="OptionsPanel">
+                    <TextBlock x:Name="QuickActionsLabel"
+                              Text="QUICK ACTIONS" 
+                              Foreground="{DynamicResource SubTextBrush}" 
+                              FontSize="11" 
+                              FontWeight="SemiBold"
+                              Margin="0,0,0,8"/>
+                    
+                    <Button x:Name="CleanAllButton"
+                            Content="⚡ Clean All Memory" 
+                            Style="{StaticResource CleanButton}" 
+                            Click="CleanAll_Click"
+                            Margin="0,0,0,12"/>
+                    
+                    <TextBlock x:Name="AdvancedOptionsLabel"
+                              Text="ADVANCED OPTIONS" 
+                              Foreground="{DynamicResource SubTextBrush}" 
+                              FontSize="11" 
+                              FontWeight="SemiBold"
+                              Margin="0,8,0,8"/>
+                    
+                    <Border Background="{DynamicResource SecondaryBrush}" CornerRadius="8" Padding="4">
+                        <StackPanel>
+                            <Button x:Name="FlushWorkingSetsBtn"
+                                    Content="Flush Working Sets" 
+                                    Style="{StaticResource OptionButton}" 
+                                    Click="EmptyWorkingSets_Click"/>
+                            <Button x:Name="FlushSystemWorkingSetBtn"
+                                    Content="Flush System Working Set" 
+                                    Style="{StaticResource OptionButton}" 
+                                    Click="EmptySystemWorkingSet_Click"/>
+                            <Button x:Name="FlushModifiedPageListBtn"
+                                    Content="Flush Modified Page List" 
+                                    Style="{StaticResource OptionButton}" 
+                                    Click="EmptyModifiedPageList_Click"/>
+                            <Button x:Name="FlushStandbyListBtn"
+                                    Content="Flush Standby List" 
+                                    Style="{StaticResource OptionButton}" 
+                                    Click="EmptyStandbyList_Click"/>
+                            <Button x:Name="FlushPriority0StandbyListBtn"
+                                    Content="Flush Priority 0 Standby List" 
+                                    Style="{StaticResource OptionButton}" 
+                                    Click="EmptyPriority0StandbyList_Click"/>
+                            <Button x:Name="CleanDiskBtn"
+                                    Content="Clean Temp &amp; Recycle Bin" 
+                                    Style="{StaticResource OptionButton}" 
+                                    Click="CleanDisk_Click"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <TextBlock x:Name="SettingsLabel"
+                              Text="SETTINGS" 
+                              Foreground="{DynamicResource SubTextBrush}" 
+                              FontSize="11" 
+                              FontWeight="SemiBold"
+                              Margin="0,16,0,8"/>
+                    
+                    <Border Background="{DynamicResource SecondaryBrush}" CornerRadius="8" Padding="8">
+                        <StackPanel>
+                            <Button x:Name="CleanOnStartupBtn"
+                                    Style="{StaticResource OptionButton}"
+                                    Click="CleanOnStartup_Click"
+                                    HorizontalContentAlignment="Stretch">
+                                <Grid>
+                                    <TextBlock x:Name="CleanOnStartupText" 
+                                               Text="Clean on Startup" 
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"/>
+                                    <Border x:Name="ToggleBorder" 
+                                            Width="40" Height="20" 
+                                            CornerRadius="10" 
+                                            Background="#555555"
+                                            HorizontalAlignment="Right">
+                                        <Ellipse x:Name="ToggleCircle"
+                                                 Width="16" Height="16" 
+                                                 Fill="White"
+                                                 HorizontalAlignment="Left"
+                                                 Margin="2,0,0,0"/>
+                                    </Border>
+                                </Grid>
+                            </Button>
+                            <Button x:Name="AutoCleanIntervalBtn"
+                                    Style="{StaticResource OptionButton}"
+                                    Click="AutoCleanInterval_Click"
+                                    HorizontalContentAlignment="Stretch">
+                                <Grid>
+                                    <TextBlock x:Name="AutoCleanIntervalText" 
+                                               Text="Auto clean every: Off" 
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="AutoCleanIntervalValue"
+                                               Text="Off"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Right"
+                                               Foreground="{DynamicResource HighlightBrush}"
+                                               FontWeight="SemiBold"/>
+                                </Grid>
+                            </Button>
+                            <Button x:Name="AutoCleanHighRamBtn"
+                                    Style="{StaticResource OptionButton}"
+                                    Click="AutoCleanHighRam_Click"
+                                    HorizontalContentAlignment="Stretch">
+                                <Grid>
+                                    <TextBlock x:Name="AutoCleanHighRamText" 
+                                               Text="Auto clean when RAM > 70%" 
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"/>
+                                    <Border x:Name="ToggleHighRamBorder" 
+                                            Width="40" Height="20" 
+                                            CornerRadius="10" 
+                                            Background="#555555"
+                                            HorizontalAlignment="Right">
+                                        <Ellipse x:Name="ToggleHighRamCircle"
+                                                 Width="16" Height="16" 
+                                                 Fill="White"
+                                                 HorizontalAlignment="Left"
+                                                 Margin="2,0,0,0"/>
+                                    </Border>
+                                </Grid>
+                            </Button>
+                            <Button x:Name="LanguageToggleBtn"
+                                    Content="Language: English"
+                                    Style="{StaticResource OptionButton}"
+                                    Click="LanguageToggle_Click"
+                                    HorizontalContentAlignment="Left"/>
+                            <Button x:Name="ThemeToggleBtn"
+                                    Content="Theme: Dark"
+                                    Style="{StaticResource OptionButton}"
+                                    Click="ThemeToggle_Click"
+                                    HorizontalContentAlignment="Left"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Status Bar -->
+            <Border Grid.Row="3" Margin="16,4,16,8">
+                <StackPanel>
+                    <TextBlock x:Name="StatusText" 
+                              Text="Ready" 
+                              Foreground="{DynamicResource SubTextBrush}" 
+                              FontSize="10"
+                              HorizontalAlignment="Center"
+                              Opacity="0.8"/>
+                    <TextBlock x:Name="FreedMemoryText" 
+                              Text="" 
+                              Foreground="{DynamicResource HighlightBrush}" 
+                              FontSize="11"
+                              FontWeight="SemiBold"
+                              HorizontalAlignment="Center"
+                              Margin="0,2,0,0"/>
+                    
+                    <!-- Social Links -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6,0,0">
+                        <StackPanel.Resources>
+                            <Style x:Key="FooterLink" TargetType="Button" BasedOn="{StaticResource OptionButton}">
+                                <Setter Property="Padding" Value="4,2"/>
+                                <Setter Property="FontSize" Value="10"/>
+                                <Setter Property="Opacity" Value="0.6"/>
+                            </Style>
+                        </StackPanel.Resources>
+                        <Button Content="Facebook" Style="{StaticResource FooterLink}" Click="Facebook_Click"/>
+                        <TextBlock Text="·" Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center" Margin="2,0" Opacity="0.5"/>
+                        <Button Content="GitHub" Style="{StaticResource FooterLink}" Click="GitHub_Click"/>
+                        <TextBlock Text="·" Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center" Margin="2,0" Opacity="0.5"/>
+                        <Button Content="Website" Style="{StaticResource FooterLink}" Click="Website_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

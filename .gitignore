@@ -1,0 +1,43 @@
+## [Visual Studio]
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## [Build Results]
+[Bb]in/
+[Oo]bj/
+Generated\ Files/
+
+## [Visual Studio Code]
+.vscode/
+*.code-workspace
+
+## [Other IDEs]
+.idea/
+*.iws
+*.iml
+*.ipr
+.rider/
+
+## [NuGet]
+packages/
+*.nupkg
+*.snupkg
+
+## [OS Cache Files]
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+## [Temporary Files]
+*.tmp
+*.temp
+*.swp
+*.bak
+
+## [Reference Files]
+exm.md
+publish/FreeMyRam.exe
+publish_small/FreeMyRam.exe
