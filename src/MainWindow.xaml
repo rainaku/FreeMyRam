@@ -8,15 +8,45 @@
         Background="Transparent"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Topmost="True">
+        Topmost="True"
+        Focusable="True"
+        PreviewKeyDown="Window_PreviewKeyDown">
     
-    <Border Background="{DynamicResource PrimaryBrush}" 
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <!-- Fade in -->
+                    <DoubleAnimation Storyboard.TargetName="MainBorder"
+                                    Storyboard.TargetProperty="Opacity"
+                                    From="0" To="1" Duration="0:0:0.3">
+                        <DoubleAnimation.EasingFunction>
+                            <QuadraticEase EasingMode="EaseOut"/>
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <!-- Slide up -->
+                    <DoubleAnimation Storyboard.TargetName="MainBorderTransform"
+                                    Storyboard.TargetProperty="Y"
+                                    From="20" To="0" Duration="0:0:0.35">
+                        <DoubleAnimation.EasingFunction>
+                            <QuadraticEase EasingMode="EaseOut"/>
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+    
+    <Border x:Name="MainBorder"
+            Background="{DynamicResource PrimaryBrush}" 
             CornerRadius="16" 
             BorderBrush="{DynamicResource AccentBrush}" 
-            BorderThickness="1">
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.5" Color="Black"/>
-        </Border.Effect>
+            BorderThickness="1"
+            Opacity="0"
+            RenderTransformOrigin="0.5,0.5">
+        <Border.RenderTransform>
+            <TranslateTransform x:Name="MainBorderTransform" Y="20"/>
+        </Border.RenderTransform>
         
         <Grid>
             <Grid.RowDefinitions>
@@ -27,19 +57,65 @@
             </Grid.RowDefinitions>
 
             <!-- Title Bar -->
-            <Grid Grid.Row="0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+            <Grid Grid.Row="0">
+                <!-- Transparent drag area covering entire header -->
+                <Border Background="Transparent" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"/>
+                
+                <!-- Title content -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0"
+                            IsHitTestVisible="False">
                     <TextBlock Text="🧹 FreeMyRam" 
                               Foreground="{DynamicResource TextBrush}" 
                               FontSize="14" 
                               FontWeight="Bold"/>
-                    <TextBlock Text="v1.0 by rainaku" 
+                    <TextBlock Text="v1.1 by rainaku" 
                               Foreground="{DynamicResource SubTextBrush}" 
                               FontSize="10" 
                               Margin="8,4,0,0"
                               VerticalAlignment="Center"/>
                 </StackPanel>
+                
+                <!-- Window buttons (need to be hit-testable) -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,8,0">
+                    <!-- Language Flags -->
+                    <Button Click="VietnameseLanguage_Click" Style="{StaticResource FlagButton}" Padding="2" Margin="0,0,4,0" ToolTip="Tiếng Việt">
+                        <Grid Width="24" Height="16">
+                            <Rectangle Fill="#DA251D" RadiusX="1" RadiusY="1"/>
+                            <Path Data="M 12,2 L 14.9,8.5 L 22,8.5 L 16.2,12.6 L 18.5,19.5 L 12,15.3 L 5.5,19.5 L 7.8,12.6 L 2,8.5 L 9.1,8.5 Z" 
+                                  Fill="#FFFF00" Stretch="Uniform" Margin="4"/>
+                        </Grid>
+                    </Button>
+                    
+                    <Button Click="EnglishLanguage_Click" Style="{StaticResource FlagButton}" Padding="2" Margin="0,0,8,0" ToolTip="English">
+                        <Grid Width="24" Height="16" ClipToBounds="True">
+                             <Border CornerRadius="1" Background="White" BorderThickness="0">
+                                 <Grid>
+                                    <StackPanel>
+                                        <Rectangle Height="2.28" Fill="#B22234"/>
+                                        <Rectangle Height="2.28" Fill="White"/>
+                                        <Rectangle Height="2.28" Fill="#B22234"/>
+                                        <Rectangle Height="2.28" Fill="White"/>
+                                        <Rectangle Height="2.28" Fill="#B22234"/>
+                                        <Rectangle Height="2.28" Fill="White"/>
+                                        <Rectangle Height="2.28" Fill="#B22234"/>
+                                    </StackPanel>
+                                    <Rectangle Width="10" Height="9" Fill="#3C3B6E" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                    <Canvas Width="10" Height="9" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                        <!-- Simplified Stars as dots -->
+                                        <Ellipse Width="1" Height="1" Fill="White" Canvas.Left="2" Canvas.Top="2"/>
+                                        <Ellipse Width="1" Height="1" Fill="White" Canvas.Left="5" Canvas.Top="2"/>
+                                        <Ellipse Width="1" Height="1" Fill="White" Canvas.Left="8" Canvas.Top="2"/>
+                                        <Ellipse Width="1" Height="1" Fill="White" Canvas.Left="3.5" Canvas.Top="4"/>
+                                        <Ellipse Width="1" Height="1" Fill="White" Canvas.Left="6.5" Canvas.Top="4"/>
+                                        <Ellipse Width="1" Height="1" Fill="White" Canvas.Left="2" Canvas.Top="6"/>
+                                        <Ellipse Width="1" Height="1" Fill="White" Canvas.Left="5" Canvas.Top="6"/>
+                                        <Ellipse Width="1" Height="1" Fill="White" Canvas.Left="8" Canvas.Top="6"/>
+                                    </Canvas>
+                                </Grid>
+                             </Border>
+                        </Grid>
+                    </Button>
+                    
                     <Button Content="—" Click="Minimize_Click" 
                             Style="{StaticResource OptionButton}" Padding="8,4"/>
                     <Button Content="✕" Click="Close_Click" 
@@ -80,6 +156,26 @@
                                 Background="{DynamicResource AccentBrush}"
                                 Foreground="{DynamicResource HighlightBrush}"
                                 BorderThickness="0"/>
+                    
+                    <!-- Ram Cached Section -->
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="CachedMemoryLabel"
+                                  Text="Cached" 
+                                  Foreground="{DynamicResource SubTextBrush}" 
+                                  FontSize="12"
+                                  VerticalAlignment="Center"/>
+                        <TextBlock x:Name="CachedMemoryText" 
+                                  Grid.Column="1"
+                                  Text="-- GB"
+                                  Foreground="{DynamicResource SubTextBrush}" 
+                                  FontSize="12"
+                                  FontWeight="SemiBold"
+                                  VerticalAlignment="Center"/>
+                    </Grid>
                 </StackPanel>
             </Border>
 
@@ -97,43 +193,77 @@
                             Content="⚡ Clean All Memory" 
                             Style="{StaticResource CleanButton}" 
                             Click="CleanAll_Click"
-                            Margin="0,0,0,12"/>
+                            Margin="10,0,10,12"/>
                     
-                    <TextBlock x:Name="AdvancedOptionsLabel"
-                              Text="ADVANCED OPTIONS" 
-                              Foreground="{DynamicResource SubTextBrush}" 
-                              FontSize="11" 
-                              FontWeight="SemiBold"
-                              Margin="0,8,0,8"/>
-                    
-                    <Border Background="{DynamicResource SecondaryBrush}" CornerRadius="8" Padding="4">
-                        <StackPanel>
-                            <Button x:Name="FlushWorkingSetsBtn"
-                                    Content="Flush Working Sets" 
-                                    Style="{StaticResource OptionButton}" 
-                                    Click="EmptyWorkingSets_Click"/>
-                            <Button x:Name="FlushSystemWorkingSetBtn"
-                                    Content="Flush System Working Set" 
-                                    Style="{StaticResource OptionButton}" 
-                                    Click="EmptySystemWorkingSet_Click"/>
-                            <Button x:Name="FlushModifiedPageListBtn"
-                                    Content="Flush Modified Page List" 
-                                    Style="{StaticResource OptionButton}" 
-                                    Click="EmptyModifiedPageList_Click"/>
-                            <Button x:Name="FlushStandbyListBtn"
-                                    Content="Flush Standby List" 
-                                    Style="{StaticResource OptionButton}" 
-                                    Click="EmptyStandbyList_Click"/>
-                            <Button x:Name="FlushPriority0StandbyListBtn"
-                                    Content="Flush Priority 0 Standby List" 
-                                    Style="{StaticResource OptionButton}" 
-                                    Click="EmptyPriority0StandbyList_Click"/>
-                            <Button x:Name="CleanDiskBtn"
-                                    Content="Clean Temp &amp; Recycle Bin" 
-                                    Style="{StaticResource OptionButton}" 
-                                    Click="CleanDisk_Click"/>
-                        </StackPanel>
-                    </Border>
+                    <StackPanel>
+                        <TextBlock x:Name="HiddenAdvancedOptionsLabel"
+                                  Text="🔧 ADVANCED OPTIONS" 
+                                  Foreground="{DynamicResource HighlightBrush}" 
+                                  FontSize="11" 
+                                  FontWeight="SemiBold"
+                                  Margin="0,8,0,8"/>
+                        
+                        <Border Background="{DynamicResource SecondaryBrush}" CornerRadius="8" Padding="4">
+                            <StackPanel>
+                                <Button x:Name="FlushWorkingSetsBtn"
+                                        Content="Flush Working Sets" 
+                                        Style="{StaticResource OptionButton}" 
+                                        Click="EmptyWorkingSets_Click"/>
+                                <Button x:Name="FlushSystemWorkingSetBtn"
+                                        Content="Flush System Working Set" 
+                                        Style="{StaticResource OptionButton}" 
+                                        Click="EmptySystemWorkingSet_Click"/>
+                                <Button x:Name="FlushModifiedPageListBtn"
+                                        Content="Flush Modified Page List" 
+                                        Style="{StaticResource OptionButton}" 
+                                        Click="EmptyModifiedPageList_Click"/>
+                                <Button x:Name="FlushStandbyListBtn"
+                                        Content="Flush Standby List" 
+                                        Style="{StaticResource OptionButton}" 
+                                        Click="EmptyStandbyList_Click"/>
+                                <Button x:Name="FlushPriority0StandbyListBtn"
+                                        Content="Flush Priority 0 Standby List" 
+                                        Style="{StaticResource OptionButton}" 
+                                        Click="EmptyPriority0StandbyList_Click"/>
+                                <Button x:Name="CleanDiskBtn"
+                                        Content="Clean Temp &amp; Recycle Bin" 
+                                        Style="{StaticResource OptionButton}" 
+                                        Click="CleanDisk_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Secret Developer Panel - Hidden by default, shown when secret code "10720040" is typed -->
+                    <StackPanel x:Name="SecretDevPanel" Visibility="Collapsed">
+                        <TextBlock Text="🕵️ INTERNAL DEBUG" 
+                                  Foreground="Red" 
+                                  FontSize="11" 
+                                  FontWeight="SemiBold"
+                                  Margin="0,16,0,4"/>
+                        
+                        <TextBlock x:Name="DevModeWarningText"
+                                  Text="Do not tamper unless you know what you're doing!"
+                                  Foreground="Orange"
+                                  FontSize="10"
+                                  TextWrapping="Wrap"
+                                  Margin="0,0,0,8"/>
+                        
+                        <Border Background="{DynamicResource SecondaryBrush}" CornerRadius="8" Padding="4" BorderBrush="Red" BorderThickness="1">
+                            <StackPanel>
+                                <Button x:Name="TestHighRamBtn"
+                                        Content="⚠️ Test: Fill RAM to 85%" 
+                                        Style="{StaticResource OptionButton}" 
+                                        Click="TestHighRam_Click"
+                                        Foreground="Red"/>
+                                        
+                                <Button x:Name="HideDevModeBtn"
+                                        Content="🔒 Hide Debug Mode" 
+                                        Style="{StaticResource OptionButton}" 
+                                        Click="HideDevMode_Click"
+                                        Foreground="{DynamicResource HighlightBrush}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
                     
                     <TextBlock x:Name="SettingsLabel"
                               Text="SETTINGS" 
@@ -205,11 +335,6 @@
                                     </Border>
                                 </Grid>
                             </Button>
-                            <Button x:Name="LanguageToggleBtn"
-                                    Content="Language: English"
-                                    Style="{StaticResource OptionButton}"
-                                    Click="LanguageToggle_Click"
-                                    HorizontalContentAlignment="Left"/>
                             <Button x:Name="ThemeToggleBtn"
                                     Content="Theme: Dark"
                                     Style="{StaticResource OptionButton}"

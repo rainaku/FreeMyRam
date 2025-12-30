@@ -14,7 +14,7 @@ public static class ThemeManager
         Light
     }
 
-    private static Theme _currentTheme = Theme.Dark;
+    private static Theme _currentTheme = Theme.Light;
     public static event Action? ThemeChanged;
 
     public static Theme CurrentTheme

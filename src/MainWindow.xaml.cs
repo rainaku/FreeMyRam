@@ -1,8 +1,10 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using System.Diagnostics;
+using FreeMyRam.Developer;
 
 namespace FreeMyRam;
 
@@ -16,6 +18,9 @@ public partial class MainWindow : Window
     private long _memoryBeforeClean;
     private bool _isExiting;
     
+    // Developer mode manager - secret code entry
+    private readonly DevModeManager _devModeManager;
+    
     // Auto clean interval options in minutes
     private static readonly int[] _intervalOptions = { 0, 5, 10, 15, 30, 45, 60, 120, 180 };
     
@@ -27,11 +32,19 @@ public partial class MainWindow : Window
     private static readonly SolidColorBrush ToggleOnBrush = new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4CAF50"));
     private static readonly SolidColorBrush ToggleOffBrush = new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#555555"));
     
+    // Memory Status Brushes
+    private static readonly SolidColorBrush NormalMemBrush = new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3399FF")); // Blue
+    private static readonly SolidColorBrush WarningMemBrush = new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FFD700")); // Gold/Yellow
+    private static readonly SolidColorBrush CriticalMemBrush = new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF4444")); // Red
+    
     static MainWindow()
     {
         // Freeze brushes for better performance
         ToggleOnBrush.Freeze();
         ToggleOffBrush.Freeze();
+        NormalMemBrush.Freeze();
+        WarningMemBrush.Freeze();
+        CriticalMemBrush.Freeze();
     }
 
     public MainWindow()
@@ -78,6 +91,15 @@ public partial class MainWindow : Window
         
         UpdateMemoryInfo();
         
+        // Setup developer mode manager (secret code: 10720040)
+        _devModeManager = new DevModeManager();
+        _devModeManager.DevModeActivated += OnDevModeActivated;
+        _devModeManager.DevModeDeactivated += OnDevModeDeactivated;
+        
+        // Ensure window can receive keyboard input
+        Focusable = true;
+        Focus();
+        
         // Auto-clean on startup if enabled
         Loaded += async (s, e) =>
         {
@@ -110,7 +132,6 @@ public partial class MainWindow : Window
             _memoryCleaner.EmptyWorkingSets();
             _memoryCleaner.EmptySystemWorkingSet();
             _memoryCleaner.EmptyModifiedPageList();
-            _memoryCleaner.EmptyStandbyList();
         });
         
         var memInfo = MemoryInfo.GetMemoryStatus();
@@ -155,21 +176,22 @@ public partial class MainWindow : Window
     {
         // Update all UI text
         MemoryUsageLabel.Text = Localization.MemoryUsage;
+        CachedMemoryLabel.Text = Localization.CachedMemory;
         QuickActionsLabel.Text = Localization.QuickActions;
         CleanAllButton.Content = Localization.CleanAllMemory;
-        AdvancedOptionsLabel.Text = Localization.AdvancedOptions;
+        HiddenAdvancedOptionsLabel.Text = Localization.AdvancedOptions;
         FlushWorkingSetsBtn.Content = Localization.FlushWorkingSets;
         FlushSystemWorkingSetBtn.Content = Localization.FlushSystemWorkingSet;
         FlushModifiedPageListBtn.Content = Localization.FlushModifiedPageList;
         FlushStandbyListBtn.Content = Localization.FlushStandbyList;
         FlushPriority0StandbyListBtn.Content = Localization.FlushPriority0StandbyList;
         CleanDiskBtn.Content = Localization.CleanDisk;
+        DevModeWarningText.Text = Localization.DevModeWarning;
         SettingsLabel.Text = Localization.Settings;
         CleanOnStartupText.Text = Localization.CleanOnStartup;
         AutoCleanIntervalText.Text = Localization.AutoCleanInterval;
         UpdateAutoCleanIntervalUI();
         AutoCleanHighRamText.Text = Localization.AutoCleanOnHighRam;
-        LanguageToggleBtn.Content = Localization.Language_Option;
         ThemeToggleBtn.Content = Localization.ThemeOption;
         StatusText.Text = Localization.Ready;
     }
@@ -253,7 +275,6 @@ public partial class MainWindow : Window
             _memoryCleaner.EmptyWorkingSets();
             _memoryCleaner.EmptySystemWorkingSet();
             _memoryCleaner.EmptyModifiedPageList();
-            _memoryCleaner.EmptyStandbyList();
         });
         
         var memInfo = MemoryInfo.GetMemoryStatus();
@@ -286,7 +307,37 @@ public partial class MainWindow : Window
         
         MemoryUsageText.Text = $"{usedGB:F1} / {totalGB:F1} GB";
         MemoryPercentText.Text = $"{usagePercent}%";
-        MemoryProgressBar.Value = usagePercent;
+        
+        // Animate progress bar
+        var animation = new DoubleAnimation
+        {
+            To = usagePercent,
+            Duration = TimeSpan.FromMilliseconds(500),
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+        MemoryProgressBar.BeginAnimation(System.Windows.Controls.Primitives.RangeBase.ValueProperty, animation);
+        
+        // Update progress bar color based on usage
+        if (usagePercent > 80)
+        {
+            MemoryProgressBar.Foreground = CriticalMemBrush;
+            MemoryPercentText.Foreground = CriticalMemBrush;
+        }
+        else if (usagePercent > 50)
+        {
+            MemoryProgressBar.Foreground = WarningMemBrush;
+            MemoryPercentText.Foreground = WarningMemBrush;
+        }
+        else
+        {
+            MemoryProgressBar.Foreground = NormalMemBrush;
+            MemoryPercentText.Foreground = NormalMemBrush;
+        }
+        
+        // Update cached memory
+        ulong cachedBytes = MemoryInfo.GetCachedBytes();
+        double cachedGB = cachedBytes / (1024.0 * 1024 * 1024);
+        CachedMemoryText.Text = $"{cachedGB:F2} GB";
         
         // Update tray tooltip
         _trayIcon?.UpdateTooltip(Localization.TrayTooltip(usedGB, totalGB, usagePercent));
@@ -344,21 +395,26 @@ public partial class MainWindow : Window
         _settings.Save();
     }
 
-    private void LanguageToggle_Click(object sender, RoutedEventArgs e)
+    private void VietnameseLanguage_Click(object sender, RoutedEventArgs e)
     {
-        // Toggle language
-        if (Localization.CurrentLanguage == Localization.Language.English)
+        if (Localization.CurrentLanguage != Localization.Language.Vietnamese)
         {
             Localization.CurrentLanguage = Localization.Language.Vietnamese;
             _settings.Language = "Vietnamese";
+            _settings.Save();
+            _trayIcon?.RefreshMenu();
         }
-        else
+    }
+
+    private void EnglishLanguage_Click(object sender, RoutedEventArgs e)
+    {
+        if (Localization.CurrentLanguage != Localization.Language.English)
         {
             Localization.CurrentLanguage = Localization.Language.English;
             _settings.Language = "English";
+            _settings.Save();
+            _trayIcon?.RefreshMenu();
         }
-        _settings.Save();
-        _trayIcon?.RefreshMenu();
     }
 
     private void ThemeToggle_Click(object sender, RoutedEventArgs e)
@@ -389,7 +445,6 @@ public partial class MainWindow : Window
             _memoryCleaner.EmptyWorkingSets();
             _memoryCleaner.EmptySystemWorkingSet();
             _memoryCleaner.EmptyModifiedPageList();
-            _memoryCleaner.EmptyStandbyList();
         });
         
         StatusText.Text = Localization.Completed;
@@ -550,4 +605,230 @@ public partial class MainWindow : Window
         }
         base.OnClosing(e);
     }
+
+    #region Developer Mode - Secret Code: 10720040
+    
+    /// <summary>
+    /// Handle keyboard input for secret developer code detection.
+    /// The code is typed directly without any input field.
+    /// </summary>
+    private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        // Process the key through DevModeManager
+        _devModeManager.ProcessKeyDown(e);
+    }
+    
+    /// <summary>
+    /// Called when developer mode is activated via secret code.
+    /// </summary>
+    private void OnDevModeActivated()
+    {
+        // Show the developer panel with animation
+        SecretDevPanel.Visibility = Visibility.Visible;
+        
+        // Create slide-down and fade-in animation
+        var slideAnimation = new DoubleAnimation
+        {
+            From = -20,
+            To = 0,
+            Duration = TimeSpan.FromMilliseconds(300),
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+        
+        var fadeAnimation = new DoubleAnimation
+        {
+            From = 0,
+            To = 1,
+            Duration = TimeSpan.FromMilliseconds(300)
+        };
+        
+        // Apply transform if not exists
+        if (SecretDevPanel.RenderTransform is not TranslateTransform)
+        {
+            SecretDevPanel.RenderTransform = new TranslateTransform();
+        }
+        
+        SecretDevPanel.RenderTransform.BeginAnimation(TranslateTransform.YProperty, slideAnimation);
+        SecretDevPanel.BeginAnimation(OpacityProperty, fadeAnimation);
+        
+        // Show notification
+        StatusText.Text = "🔓 Developer Mode Activated";
+        FreedMemoryText.Text = "";
+    }
+    
+    /// <summary>
+    /// Called when developer mode is deactivated.
+    /// </summary>
+    private void OnDevModeDeactivated()
+    {
+        // Hide the developer panel with animation
+        var fadeAnimation = new DoubleAnimation
+        {
+            From = 1,
+            To = 0,
+            Duration = TimeSpan.FromMilliseconds(200)
+        };
+        
+        fadeAnimation.Completed += (s, e) =>
+        {
+            SecretDevPanel.Visibility = Visibility.Collapsed;
+        };
+        
+        SecretDevPanel.BeginAnimation(OpacityProperty, fadeAnimation);
+        
+        // Show notification
+        StatusText.Text = Localization.Ready;
+    }
+    
+    /// <summary>
+    /// Hide developer mode button click handler.
+    /// </summary>
+    private void HideDevMode_Click(object sender, RoutedEventArgs e)
+    {
+        _devModeManager.DeactivateDevMode();
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+    private static extern IntPtr VirtualAlloc(IntPtr lpAddress, IntPtr dwSize, uint flAllocationType, uint flProtect);
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+    private static extern bool VirtualFree(IntPtr lpAddress, IntPtr dwSize, uint dwFreeType);
+
+    private const uint MEM_COMMIT = 0x1000;
+    private const uint MEM_RESERVE = 0x2000;
+    private const uint PAGE_READWRITE = 0x04;
+    private const uint MEM_RELEASE = 0x8000;
+
+    // List to hold allocated memory pointers
+    private List<IntPtr> _memoryStressDump = new();
+    private bool _isStressTesting = false;
+
+    private async void TestHighRam_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isStressTesting)
+        {
+            // Stop stress test
+            _isStressTesting = false;
+            
+            // Free unmanaged memory
+            foreach (var ptr in _memoryStressDump)
+            {
+                VirtualFree(ptr, IntPtr.Zero, MEM_RELEASE);
+            }
+            _memoryStressDump.Clear();
+            
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            
+            TestHighRamBtn.Content = "⚠️ Test: Fill RAM to 85%";
+            StatusText.Text = "Stress test stopped";
+            return;
+        }
+
+        _isStressTesting = true;
+        TestHighRamBtn.Content = "⏹️ Stop Stress Test";
+        StatusText.Text = "Filling RAM to 85%...";
+        
+        await Task.Run(async () =>
+        {
+            try 
+            {
+                var memInfo = MemoryInfo.GetMemoryStatus();
+                ulong totalRam = memInfo.TotalPhysicalMemory;
+                ulong targetUsage = (ulong)(totalRam * 0.85);
+                long allocatedSoFar = 0;
+                
+                // 100MB chunks
+                int chunkSize = 100 * 1024 * 1024;
+                
+                while (_isStressTesting)
+                {
+                    memInfo = MemoryInfo.GetMemoryStatus();
+                    ulong currentUsage = memInfo.TotalPhysicalMemory - memInfo.AvailablePhysicalMemory;
+                    
+                    if (currentUsage >= targetUsage)
+                    {
+                        // Update UI with status
+                        System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                        {
+                            double allocatedGB = allocatedSoFar / (1024.0 * 1024 * 1024);
+                            StatusText.Text = $"Holding @ 85% (Alloc: {allocatedGB:F1} GB)";
+                        });
+                        
+                        await Task.Delay(500);
+                        continue;
+                    }
+                    
+                    // Reduce chunk size if close to target
+                    if (targetUsage > currentUsage && (targetUsage - currentUsage) < (ulong)chunkSize)
+                    {
+                        chunkSize = 10 * 1024 * 1024; // 10MB
+                    }
+                    
+                    try
+                    {
+                        // Use VirtualAlloc for better control over large allocations
+                        IntPtr ptr = VirtualAlloc(IntPtr.Zero, (IntPtr)chunkSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+                        
+                        if (ptr == IntPtr.Zero)
+                        {
+                            // Allocation failed
+                            await Task.Delay(100);
+                            break;
+                        }
+                        
+                        // Touch memory to ensure it's actually committed to RAM
+                        unsafe 
+                        {
+                            byte* p = (byte*)ptr;
+                            // Touch every 4KB (Page Size) to force OS to back it with physical RAM
+                            int pageSize = 4096;
+                            for(int i=0; i < chunkSize; i += pageSize)
+                            {
+                                *(p + i) = 1;
+                            }
+                            // Touch last byte
+                            *(p + chunkSize - 1) = 1;
+                        }
+                        
+                        _memoryStressDump.Add(ptr);
+                        allocatedSoFar += chunkSize;
+                        
+                        // Update UI occasionally
+                        if (_memoryStressDump.Count % 5 == 0)
+                        {
+                            System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                            {
+                                double allocatedGB = allocatedSoFar / (1024.0 * 1024 * 1024);
+                                StatusText.Text = $"Filling... (Alloc: {allocatedGB:F1} GB)";
+                            });
+                        }
+                        
+                        await Task.Delay(10); 
+                    }
+                    catch (Exception)
+                    {
+                        // Ignore allocation failures and continue or break
+                        break;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Ignore errors
+            }
+        });
+        
+        if (!_isStressTesting)
+        {
+             foreach (var ptr in _memoryStressDump)
+             {
+                 VirtualFree(ptr, IntPtr.Zero, MEM_RELEASE);
+             }
+             _memoryStressDump.Clear();
+             GC.Collect();
+        }
+    }
+    
+    #endregion
 }

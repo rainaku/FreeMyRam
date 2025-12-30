@@ -16,7 +16,7 @@ public class AppSettings
 
     public bool CleanOnStartup { get; set; } = false;
     public string Language { get; set; } = "English";
-    public string Theme { get; set; } = "Dark";
+    public string Theme { get; set; } = "Light";
     
     // Auto clean interval in minutes (0 = disabled, options: 5, 10, 15, 30, 45, 60, 120, 180)
     public int AutoCleanIntervalMinutes { get; set; } = 0;

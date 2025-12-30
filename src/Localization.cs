@@ -30,14 +30,20 @@ public static class Localization
     // UI Strings
     public static string AppTitle => CurrentLanguage switch
     {
-        Language.Vietnamese => "🧹 FreeMyRam v1.0 by rainaku",
-        _ => "🧹 FreeMyRam v1.0 by rainaku"
+        Language.Vietnamese => "🧹 FreeMyRam v1.1 by rainaku",
+        _ => "🧹 FreeMyRam v1.1 by rainaku"
     };
 
     public static string MemoryUsage => CurrentLanguage switch
     {
         Language.Vietnamese => "RAM đang sử dụng",
         _ => "Memory Usage"
+    };
+
+    public static string CachedMemory => CurrentLanguage switch
+    {
+        Language.Vietnamese => "RAM Cached",
+        _ => "Cached"
     };
 
     public static string QuickActions => CurrentLanguage switch
@@ -48,14 +54,26 @@ public static class Localization
 
     public static string CleanAllMemory => CurrentLanguage switch
     {
-        Language.Vietnamese => "⚡ Dọn dẹp toàn bộ",
+        Language.Vietnamese => "Dọn dẹp nhanh",
         _ => "⚡ Clean All Memory"
     };
 
     public static string AdvancedOptions => CurrentLanguage switch
     {
-        Language.Vietnamese => "TÙY CHỌN NÂNG CAO",
-        _ => "ADVANCED OPTIONS"
+        Language.Vietnamese => "🔧 TÙY CHỌN NÂNG CAO",
+        _ => "🔧 ADVANCED OPTIONS"
+    };
+
+    public static string DevModeActivated => CurrentLanguage switch
+    {
+        Language.Vietnamese => "🔓 Chế độ Developer đã kích hoạt",
+        _ => "🔓 Developer Mode Activated"
+    };
+
+    public static string HideDevMode => CurrentLanguage switch
+    {
+        Language.Vietnamese => "🔒 Ẩn chế độ Developer",
+        _ => "🔒 Hide Developer Mode"
     };
 
     public static string FlushWorkingSets => CurrentLanguage switch
@@ -367,5 +385,11 @@ public static class Localization
     {
         Language.Vietnamese => "Bộ nhớ đã được tối ưu!",
         _ => "Memory optimized!"
+    };
+
+    public static string DevModeWarning => CurrentLanguage switch
+    {
+        Language.Vietnamese => "Đừng tùy tiện thử trừ khi bạn biết bạn đang làm gì !",
+        _ => "Do not try this unless you know what you're doing!"
     };
 }
