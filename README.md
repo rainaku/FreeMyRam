@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/Assets/icon.svg" width="128" height="128" alt="FreeMyRam Logo">
+  <img src="src/Assets/icon.png" width="128" height="128" alt="FreeMyRam Logo">
 </p>
 
 <h1 align="center">FreeMyRam</h1>
@@ -98,6 +98,15 @@
 | **Wait for Notification** | Get balloon alerts when auto-clean completes |
 
 ## 📝 Changelog
+
+### v1.2.0
+- Added "Start with Windows" option to launch app on system startup
+- Added custom app icon for exe and system tray
+- Faster RAM usage updates (every 0.5 seconds)
+- Fixed single instance - reopening exe shows existing window instead of new instance
+- Improved button hover effects with text color transitions
+- Removed focus border on buttons when using Tab navigation
+- Performance optimizations for faster startup
 
 ### v1.1.0
 - Added Auto-Clean based on RAM threshold (>70%)

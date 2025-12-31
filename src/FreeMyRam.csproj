@@ -8,7 +8,8 @@
     <AssemblyName>FreeMyRam</AssemblyName>
     <RootNamespace>FreeMyRam</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.1.0</Version>
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+    <Version>1.2.0</Version>
     <Company>CodeShii</Company>
     <Product>FreeMyRam</Product>
     <Description>Simple and fast RAM cleaner for Windows</Description>
@@ -29,6 +30,12 @@
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
+
+  <!-- Embedded Resources -->
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\icon.png" />
+    <Content Include="Assets\icon.ico" />
+  </ItemGroup>
 
   <!-- Release optimizations -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">

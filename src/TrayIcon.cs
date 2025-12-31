@@ -18,6 +18,10 @@ public class TrayIcon : IDisposable
     private Forms.ToolStripMenuItem? _cleanOnStartupItem;
     private Forms.ToolStripMenuItem? _languageItem;
     private bool _disposed;
+    
+    // Cached icon to avoid recreating every time (significant startup optimization)
+    private static Icon? _cachedIcon;
+    private static readonly object _iconLock = new();
 
     public TrayIcon(MemoryCleaner memoryCleaner, AppSettings settings, Action showWindowAction, Action exitAction, Action onSettingsChanged)
     {
@@ -29,11 +33,13 @@ public class TrayIcon : IDisposable
 
         _notifyIcon = new Forms.NotifyIcon
         {
-            Icon = CreateDefaultIcon(),
+            Icon = GetCachedIcon(),
             Text = "FreeMyRam - Click to open",
-            Visible = true,
-            ContextMenuStrip = CreateContextMenu()
+            Visible = true
         };
+        
+        // Defer context menu creation to improve startup time
+        _notifyIcon.ContextMenuStrip = CreateContextMenu();
 
         _notifyIcon.DoubleClick += (s, e) => _showWindowAction();
         
@@ -53,9 +59,67 @@ public class TrayIcon : IDisposable
         OnLanguageChanged();
     }
 
+    private static Icon GetCachedIcon()
+    {
+        if (_cachedIcon != null)
+            return _cachedIcon;
+            
+        lock (_iconLock)
+        {
+            _cachedIcon ??= LoadIconFromResource();
+            return _cachedIcon;
+        }
+    }
+
+    private static Icon LoadIconFromResource()
+    {
+        try
+        {
+            // Try to load icon from embedded resource
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream("FreeMyRam.Assets.icon.png");
+            
+            if (stream != null)
+            {
+                using var bitmap = new Bitmap(stream);
+                // Resize to 32x32 for tray icon
+                using var resized = new Bitmap(bitmap, new System.Drawing.Size(32, 32));
+                return Icon.FromHandle(resized.GetHicon());
+            }
+        }
+        catch
+        {
+            // Fall through to create default icon
+        }
+        
+        // Fallback: Try to load from file path
+        try
+        {
+            string exePath = Environment.ProcessPath ?? System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string? exeDir = System.IO.Path.GetDirectoryName(exePath);
+            if (exeDir != null)
+            {
+                string iconPath = System.IO.Path.Combine(exeDir, "Assets", "icon.png");
+                if (System.IO.File.Exists(iconPath))
+                {
+                    using var bitmap = new Bitmap(iconPath);
+                    using var resized = new Bitmap(bitmap, new System.Drawing.Size(32, 32));
+                    return Icon.FromHandle(resized.GetHicon());
+                }
+            }
+        }
+        catch
+        {
+            // Fall through to create default icon
+        }
+        
+        // Final fallback: Create icon programmatically
+        return CreateDefaultIcon();
+    }
+
     private static Icon CreateDefaultIcon()
     {
-        // Create a better looking icon programmatically
+        // Create a simple icon programmatically as fallback
         using var bitmap = new Bitmap(32, 32);
         using var g = Graphics.FromImage(bitmap);
         

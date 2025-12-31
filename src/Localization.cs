@@ -30,8 +30,8 @@ public static class Localization
     // UI Strings
     public static string AppTitle => CurrentLanguage switch
     {
-        Language.Vietnamese => "🧹 FreeMyRam v1.1 by rainaku",
-        _ => "🧹 FreeMyRam v1.1 by rainaku"
+        Language.Vietnamese => "🧹 FreeMyRam v1.2 by rainaku",
+        _ => "🧹 FreeMyRam v1.2 by rainaku"
     };
 
     public static string MemoryUsage => CurrentLanguage switch
@@ -55,7 +55,7 @@ public static class Localization
     public static string CleanAllMemory => CurrentLanguage switch
     {
         Language.Vietnamese => "Dọn dẹp nhanh",
-        _ => "⚡ Clean All Memory"
+        _ => "Clean All Memory"
     };
 
     public static string AdvancedOptions => CurrentLanguage switch
@@ -182,6 +182,12 @@ public static class Localization
     {
         Language.Vietnamese => "Tự động dọn dẹp khi khởi động",
         _ => "Clean on Startup"
+    };
+
+    public static string StartWithWindows => CurrentLanguage switch
+    {
+        Language.Vietnamese => "Khởi động cùng Windows",
+        _ => "Start with Windows"
     };
 
     public static string AutoCleanInterval => CurrentLanguage switch

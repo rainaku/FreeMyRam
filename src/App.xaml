@@ -21,8 +21,9 @@
 
         <!-- Clean Button Style -->
         <Style x:Key="CleanButton" TargetType="Button">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Foreground" Value="Black"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="20,12"/>
             <Setter Property="FontSize" Value="14"/>
@@ -41,7 +42,10 @@
                                 Background="{TemplateBinding Background}" 
                                 CornerRadius="8"
                                 Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter x:Name="contentPresenter" 
+                                              HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <EventTrigger RoutedEvent="MouseEnter">
@@ -78,6 +82,7 @@
                             </EventTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{DynamicResource HighlightBrush}"/>
+                                <Setter TargetName="contentPresenter" Property="TextElement.Foreground" Value="White"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="border" Property="Opacity" Value="0.8"/>
@@ -90,6 +95,7 @@
 
         <!-- Option Button Style -->
         <Style x:Key="OptionButton" TargetType="Button">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -119,6 +125,7 @@
 
         <!-- Flag Button Style (No Hover Background) -->
         <Style x:Key="FlagButton" TargetType="Button">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="4"/>

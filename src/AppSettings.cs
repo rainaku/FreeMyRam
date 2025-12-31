@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using Microsoft.Win32;
 
 namespace FreeMyRam;
 
@@ -13,6 +14,9 @@ public class AppSettings
         "FreeMyRam",
         "settings.json"
     );
+    
+    private const string StartupRegistryKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
+    private const string AppName = "FreeMyRam";
 
     public bool CleanOnStartup { get; set; } = false;
     public string Language { get; set; } = "English";
@@ -26,6 +30,9 @@ public class AppSettings
     
     // RAM usage threshold percentage (default 70%)
     public int RamUsageThreshold { get; set; } = 70;
+    
+    // Start with Windows
+    public bool StartWithWindows { get; set; } = false;
 
     public static AppSettings Load()
     {
@@ -34,14 +41,19 @@ public class AppSettings
             if (File.Exists(SettingsPath))
             {
                 string json = File.ReadAllText(SettingsPath);
-                return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+                var settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+                // Sync StartWithWindows with actual registry state
+                settings.StartWithWindows = IsInStartup();
+                return settings;
             }
         }
         catch
         {
             // If loading fails, return default settings
         }
-        return new AppSettings();
+        var defaultSettings = new AppSettings();
+        defaultSettings.StartWithWindows = IsInStartup();
+        return defaultSettings;
     }
 
     public void Save()
@@ -62,4 +74,48 @@ public class AppSettings
             // Ignore save errors
         }
     }
+    
+    /// <summary>
+    /// Check if app is registered to start with Windows
+    /// </summary>
+    public static bool IsInStartup()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(StartupRegistryKey, false);
+            return key?.GetValue(AppName) != null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Add or remove app from Windows startup
+    /// </summary>
+    public static void SetStartWithWindows(bool enable)
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(StartupRegistryKey, true);
+            if (key == null) return;
+            
+            if (enable)
+            {
+                // Get the current executable path
+                string exePath = Environment.ProcessPath ?? System.Reflection.Assembly.GetExecutingAssembly().Location;
+                key.SetValue(AppName, $"\"{exePath}\"");
+            }
+            else
+            {
+                key.DeleteValue(AppName, false);
+            }
+        }
+        catch
+        {
+            // Ignore registry errors
+        }
+    }
 }
+

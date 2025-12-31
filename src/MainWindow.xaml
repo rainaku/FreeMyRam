@@ -68,7 +68,7 @@
                               Foreground="{DynamicResource TextBrush}" 
                               FontSize="14" 
                               FontWeight="Bold"/>
-                    <TextBlock Text="v1.1 by rainaku" 
+                    <TextBlock Text="v1.2 by rainaku" 
                               Foreground="{DynamicResource SubTextBrush}" 
                               FontSize="10" 
                               Margin="8,4,0,0"
@@ -289,6 +289,28 @@
                                             Background="#555555"
                                             HorizontalAlignment="Right">
                                         <Ellipse x:Name="ToggleCircle"
+                                                 Width="16" Height="16" 
+                                                 Fill="White"
+                                                 HorizontalAlignment="Left"
+                                                 Margin="2,0,0,0"/>
+                                    </Border>
+                                </Grid>
+                            </Button>
+                            <Button x:Name="StartWithWindowsBtn"
+                                    Style="{StaticResource OptionButton}"
+                                    Click="StartWithWindows_Click"
+                                    HorizontalContentAlignment="Stretch">
+                                <Grid>
+                                    <TextBlock x:Name="StartWithWindowsText" 
+                                               Text="Start with Windows" 
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"/>
+                                    <Border x:Name="ToggleStartupBorder" 
+                                            Width="40" Height="20" 
+                                            CornerRadius="10" 
+                                            Background="#555555"
+                                            HorizontalAlignment="Right">
+                                        <Ellipse x:Name="ToggleStartupCircle"
                                                  Width="16" Height="16" 
                                                  Fill="White"
                                                  HorizontalAlignment="Left"

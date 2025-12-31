@@ -33,7 +33,7 @@ public partial class MainWindow : Window
     private static readonly SolidColorBrush ToggleOffBrush = new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#555555"));
     
     // Memory Status Brushes
-    private static readonly SolidColorBrush NormalMemBrush = new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3399FF")); // Blue
+    private static readonly SolidColorBrush NormalMemBrush = new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0d6efd")); // Blue (matches Light theme highlight)
     private static readonly SolidColorBrush WarningMemBrush = new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FFD700")); // Gold/Yellow
     private static readonly SolidColorBrush CriticalMemBrush = new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF4444")); // Red
     
@@ -51,63 +51,69 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _memoryCleaner = new MemoryCleaner();
-        _settings = AppSettings.Load();
+        // Use cached settings from App if available, otherwise load (fallback)
+        _settings = App.CachedSettings ?? AppSettings.Load();
         
-        // Apply settings to UI
+        // Apply settings to UI immediately (lightweight operations)
         UpdateToggleVisual(_settings.CleanOnStartup);
+        UpdateStartupToggleVisual(_settings.StartWithWindows);
         UpdateHighRamToggleVisual(_settings.AutoCleanOnHighUsage);
         UpdateAutoCleanIntervalUI();
         
-        // Apply language setting
+        // Apply language setting (already set in App.xaml.cs, just subscribe)
         Localization.CurrentLanguage = _settings.Language == "Vietnamese" 
             ? Localization.Language.Vietnamese 
             : Localization.Language.English;
         Localization.LanguageChanged += UpdateUILanguage;
         
-        // Apply theme setting
-        ThemeManager.CurrentTheme = _settings.Theme == "Light" 
-            ? ThemeManager.Theme.Light 
-            : ThemeManager.Theme.Dark;
+        // Apply theme setting (already applied in App.xaml.cs, just subscribe)
         ThemeManager.ThemeChanged += UpdateUITheme;
         
         UpdateUILanguage();
         UpdateUITheme();
         
-        // Initialize system tray
-        _trayIcon = new TrayIcon(_memoryCleaner, _settings, ShowWindow, ExitApplication, OnSettingsChanged);
-        
-        // Update memory info every 2 seconds (optimized from 1s)
+        // Initialize timers (but don't start yet)
         _updateTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromSeconds(2)
+            Interval = TimeSpan.FromMilliseconds(500) // Update every 0.5 seconds for responsive UI
         };
         _updateTimer.Tick += UpdateTimer_Tick;
-        _updateTimer.Start();
         
-        // Auto clean timer
         _autoCleanTimer = new DispatcherTimer();
         _autoCleanTimer.Tick += async (s, e) => await PerformAutoClean();
-        SetupAutoCleanTimer();
         
-        UpdateMemoryInfo();
-        
-        // Setup developer mode manager (secret code: 10720040)
+        // Setup developer mode manager
         _devModeManager = new DevModeManager();
         _devModeManager.DevModeActivated += OnDevModeActivated;
         _devModeManager.DevModeDeactivated += OnDevModeDeactivated;
         
         // Ensure window can receive keyboard input
         Focusable = true;
+        
+        // Defer heavy initialization to after window is shown (improves perceived startup time)
+        Loaded += OnWindowLoaded;
+    }
+    
+    private async void OnWindowLoaded(object sender, RoutedEventArgs e)
+    {
+        // Initialize system tray (deferred for faster window display)
+        _trayIcon = new TrayIcon(_memoryCleaner, _settings, ShowWindow, ExitApplication, OnSettingsChanged);
+        
+        // Start timers after window is loaded
+        _updateTimer.Start();
+        SetupAutoCleanTimer();
+        
+        // Initial memory update
+        UpdateMemoryInfo();
+        
+        // Focus the window
         Focus();
         
         // Auto-clean on startup if enabled
-        Loaded += async (s, e) =>
+        if (_settings.CleanOnStartup)
         {
-            if (_settings.CleanOnStartup)
-            {
-                await AutoCleanOnStartup();
-            }
-        };
+            await AutoCleanOnStartup();
+        }
     }
 
     private void SetupAutoCleanTimer()
@@ -189,6 +195,7 @@ public partial class MainWindow : Window
         DevModeWarningText.Text = Localization.DevModeWarning;
         SettingsLabel.Text = Localization.Settings;
         CleanOnStartupText.Text = Localization.CleanOnStartup;
+        StartWithWindowsText.Text = Localization.StartWithWindows;
         AutoCleanIntervalText.Text = Localization.AutoCleanInterval;
         UpdateAutoCleanIntervalUI();
         AutoCleanHighRamText.Text = Localization.AutoCleanOnHighRam;
@@ -212,6 +219,22 @@ public partial class MainWindow : Window
             ToggleBorder.Background = ToggleOffBrush;
             ToggleCircle.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
             ToggleCircle.Margin = ToggleOffMargin;
+        }
+    }
+
+    private void UpdateStartupToggleVisual(bool isOn)
+    {
+        if (isOn)
+        {
+            ToggleStartupBorder.Background = ToggleOnBrush;
+            ToggleStartupCircle.HorizontalAlignment = System.Windows.HorizontalAlignment.Right;
+            ToggleStartupCircle.Margin = ToggleOnMargin;
+        }
+        else
+        {
+            ToggleStartupBorder.Background = ToggleOffBrush;
+            ToggleStartupCircle.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+            ToggleStartupCircle.Margin = ToggleOffMargin;
         }
     }
 
@@ -374,6 +397,14 @@ public partial class MainWindow : Window
         UpdateToggleVisual(_settings.CleanOnStartup);
         _settings.Save();
         _trayIcon?.UpdateCleanOnStartupMenu(_settings.CleanOnStartup);
+    }
+
+    private void StartWithWindows_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.StartWithWindows = !_settings.StartWithWindows;
+        UpdateStartupToggleVisual(_settings.StartWithWindows);
+        AppSettings.SetStartWithWindows(_settings.StartWithWindows);
+        _settings.Save();
     }
 
     private void AutoCleanInterval_Click(object sender, RoutedEventArgs e)
